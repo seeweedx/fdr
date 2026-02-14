@@ -215,10 +215,10 @@ void Terminal::render_frame(const std::string& query,
   // Hide cursor
   buf += "\x1b[?25l";
 
-  // Layout (bottom-aligned, like fzf):
-  //   row (height-1): prompt "> query"
+  // Layout (bottom-aligned):
+  //   rows above: results (closest match nearest to prompt)
   //   row (height-2): status "N/M"
-  //   rows above:     results (closest match nearest to prompt)
+  //   row (height-1): prompt "> query"
 
   int display_count = std::min(static_cast<int>(results.size()), max_results);
 
