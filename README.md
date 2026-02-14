@@ -38,11 +38,14 @@ cmake --build build
 
 ## Adding to PATH
 
-To use `fdr` from anywhere in your **current** terminal session:
+To use `fdr` from anywhere during your **current** terminal session, add the executable's directory to `$PATH`:
+
+>[!Note]
+>Make sure to replace `path/to/fdr` in the commands below with the actual **full** path to the executable's directory.
 
 **Linux / macOS:**
 ```bash
-export PATH="$PATH:~/Projects/fdr/build"
+export PATH="$PATH:/path/to/fdr/build"
 ```
 
 **Windows (CMD):**
@@ -77,17 +80,33 @@ find . -type f | fdr
 | Escape / Ctrl-C | Cancel and exit |
 | Backspace | Delete last character |
 
-### Example
+### Examples
+
+>[!Note]
+>The line you've selected with `fdr` is printed to stdout, so it can be captured with `$()` or backticks.
 
 ```bash
-# Pick a file and open it in vim
-vim "$(find . -type f | fdr)"
+# Search through files in current directory
+ls | fdr
 
-# Select a git branch
+# Search through lines in a file
+cat lorem_ipsum.txt | fdr
+
+# Search through running processes (Unix)
+ps aux | fdr
+
+# Search through running processes (Windows)
+ps | fdr
+
+# Search environment variables (Unix)
+env | fdr
+
+# Find a file and open it with your application (Visual Studio Code) (Unix)
+code "$(find . -type f | fdr)"
+
+# Switch git branch
 git checkout "$(git branch | fdr)"
 ```
-
-The selected line is printed to stdout, so it can be captured with `$()` or backticks.
 
 ## Cross-Platform Support
 
