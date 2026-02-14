@@ -14,7 +14,7 @@ cmake -B build
 cmake --build build
 ```
 
-The binary will be at `./build/fdr` (or `./build/Release/fdr.exe` on Windows with MSVC).
+The binary will be at `./build/fdr` (or `./build/Debug/fdr.exe` on Windows with MSVC).
 
 ### Build types
 
@@ -47,12 +47,12 @@ export PATH="$PATH:~/Projects/fdr/build"
 
 **Windows (CMD):**
 ```cmd
-set PATH=%PATH%;C:\path\to\fdr\build
+set PATH=%PATH%;C:\path\to\fdr\build\Debug
 ```
 
 **Windows (PowerShell):**
 ```powershell
-$env:PATH += ";C:\path\to\fdr\build"
+$env:PATH += ";C:\path\to\fdr\build\Debug"
 ```
 
 To make it permanent, add the line to your shell config (`~/.bashrc`, `~/.zshrc`) or on Windows go to Settings > System > About > Advanced system settings > Environment Variables.
