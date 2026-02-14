@@ -14,9 +14,21 @@ cmake -B build
 cmake --build build
 ```
 
-The binary will be at `./build/fdr`.
+The binary will be at `./build/fdr` (or `./build/Release/fdr.exe` on Windows with MSVC).
 
-To clean and rebuild from scratch:
+### Build types
+
+```bash
+# Release (optimized, -O2/-O3)
+cmake -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build
+
+# Debug (no optimization, full debug symbols)
+cmake -B build -DCMAKE_BUILD_TYPE=Debug
+cmake --build build
+```
+
+### Clean and rebuild
 
 ```bash
 rm -rf build
