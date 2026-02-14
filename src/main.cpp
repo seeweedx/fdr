@@ -56,9 +56,8 @@ int main() {
   bool done = false;
   bool cancelled = false;
 
-  // Initial render
-  std::size_t max_results = static_cast<std::size_t>(term.get_height() - 2);
-  auto results = matcher.search(query, max_results);
+  // Initial render - fetch all matches, not just screen-sized
+  auto results = matcher.search(query, lines.size());
   term.render_frame(query, results, lines, selected, lines.size());
 
   while (!done) {
@@ -102,8 +101,7 @@ int main() {
     }
 
     if (!done) {
-      max_results = static_cast<std::size_t>(term.get_height() - 2);
-      results = matcher.search(query, max_results);
+      results = matcher.search(query, lines.size());
       if (selected >= results.size() && !results.empty())
         selected = results.size() - 1;
       term.render_frame(query, results, lines, selected, lines.size());

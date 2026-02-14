@@ -242,19 +242,30 @@ void Terminal::render_frame(const std::string& query,
   //   row (height-2): status "N/M"
   //   row (height-1): prompt "> query"
 
-  int display_count = std::min(static_cast<int>(results.size()), max_results);
+  int total_results = static_cast<int>(results.size());
+  int display_count = std::min(total_results, max_results);
 
-  // First row of content = height - 2 - display_count + 1
-  // Start by clearing empty rows above results
+  // Compute scroll window based on selected index
+  // selected=0 is best match (bottom), higher = further up the list
+  int sel = static_cast<int>(selected_idx);
+  int scroll_offset = 0;
+  if (sel >= display_count)
+    scroll_offset = sel - display_count + 1;
+
+  // First row of content on screen
   int first_result_row = height - 2 - display_count + 1;
   for (int row = 1; row <= first_result_row - 1 && row < height - 1; ++row) {
     buf += "\x1b[" + std::to_string(row) + ";1H";
     buf += "\x1b[K";
   }
 
-  // Render results (furthest match at top, closest match near prompt)
+  // Render visible window of results
   for (int i = 0; i < display_count; ++i) {
-    int result_idx = display_count - 1 - i; // Reverse: best match at bottom
+    // Map screen position to result index within scroll window
+    int result_idx = scroll_offset + display_count - 1 - i;
+    if (result_idx >= total_results)
+      result_idx = total_results - 1;
+
     int screen_row = first_result_row + i;
     if (screen_row < 1)
       continue;
@@ -265,7 +276,7 @@ void Terminal::render_frame(const std::string& query,
     const std::string& line = lines[match.line_index];
 
     // Highlight selected line
-    if (static_cast<std::size_t>(result_idx) == selected_idx)
+    if (result_idx == sel)
       buf += "\x1b[7m"; // Reverse video
 
     buf += "  ";
@@ -280,7 +291,7 @@ void Terminal::render_frame(const std::string& query,
         buf += "\x1b[32;1m"; // Bold green
         buf += line[ci];
         buf += "\x1b[0m";
-        if (static_cast<std::size_t>(result_idx) == selected_idx)
+        if (result_idx == sel)
           buf += "\x1b[7m";
         ++match_pos_idx;
       } else {
