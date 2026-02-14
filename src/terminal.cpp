@@ -48,8 +48,9 @@ void Terminal::enable_raw_mode() {
   original_stdin_mode_ = reinterpret_cast<void*>(static_cast<uintptr_t>(stdin_mode));
   original_stdout_mode_ = reinterpret_cast<void*>(static_cast<uintptr_t>(stdout_mode));
 
-  // Enable virtual terminal processing for ANSI escape codes
-  SetConsoleMode(h_stdin, ENABLE_VIRTUAL_TERMINAL_INPUT);
+  // Disable line input and echo for raw key reading
+  SetConsoleMode(h_stdin, ENABLE_WINDOW_INPUT);
+  // Enable ANSI escape codes for output
   SetConsoleMode(h_stdout, stdout_mode | ENABLE_VIRTUAL_TERMINAL_PROCESSING | DISABLE_NEWLINE_AUTO_RETURN);
 #else
   if (!original_termios_)
@@ -95,29 +96,49 @@ void Terminal::disable_raw_mode() {
 }
 
 KeyEvent Terminal::read_key() {
-  char c;
 #ifdef _WIN32
   HANDLE h_stdin = GetStdHandle(STD_INPUT_HANDLE);
-  DWORD read;
-  ReadConsoleA(h_stdin, &c, 1, &read, nullptr);
+  while (true) {
+    INPUT_RECORD ir;
+    DWORD count;
+    if (!ReadConsoleInput(h_stdin, &ir, 1, &count) || count == 0)
+      return {Key::ESCAPE, 0};
+
+    // Only process key-down events
+    if (ir.EventType != KEY_EVENT || !ir.Event.KeyEvent.bKeyDown)
+      continue;
+
+    WORD vk = ir.Event.KeyEvent.wVirtualKeyCode;
+    char ch = ir.Event.KeyEvent.uChar.AsciiChar;
+
+    if (vk == VK_UP)
+      return {Key::ARROW_UP, 0};
+    if (vk == VK_DOWN)
+      return {Key::ARROW_DOWN, 0};
+    if (vk == VK_RETURN)
+      return {Key::ENTER, 0};
+    if (vk == VK_ESCAPE)
+      return {Key::ESCAPE, 0};
+    if (vk == VK_BACK)
+      return {Key::BACKSPACE, 0};
+    if (vk == VK_TAB)
+      return {Key::TAB, 0};
+
+    // Ctrl-C
+    if (ch == 3)
+      return {Key::CTRL_C, 0};
+
+    // Printable characters
+    if (ch >= 32 && ch < 127)
+      return {Key::CHAR, ch};
+  }
 #else
+  char c;
   if (::read(STDIN_FILENO, &c, 1) <= 0)
     return {Key::ESCAPE, 0};
-#endif
 
   if (c == '\x1b') {
     char seq[2];
-#ifdef _WIN32
-    // Use PeekConsoleInput to check if more bytes follow
-    INPUT_RECORD ir;
-    DWORD events;
-    if (PeekConsoleInput(h_stdin, &ir, 1, &events) && events > 0) {
-      ReadConsoleA(h_stdin, &seq[0], 1, &read, nullptr);
-      ReadConsoleA(h_stdin, &seq[1], 1, &read, nullptr);
-    } else {
-      return {Key::ESCAPE, 0};
-    }
-#else
     // Non-blocking read with 100ms timeout to distinguish
     // standalone Escape from escape sequences (e.g. arrow keys)
     struct termios current;
@@ -136,7 +157,6 @@ KeyEvent Terminal::read_key() {
     tcsetattr(STDIN_FILENO, TCSANOW, &current);
     if (n <= 0)
       return {Key::ESCAPE, 0};
-#endif
 
     if (seq[0] == '[') {
       switch (seq[1]) {
@@ -160,6 +180,7 @@ KeyEvent Terminal::read_key() {
     return {Key::CHAR, c};
 
   return {Key::UNKNOWN, 0};
+#endif
 }
 
 int Terminal::get_width() const {
