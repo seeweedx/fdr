@@ -86,17 +86,20 @@ find . -type f | fdr
 >The line you've selected with `fdr` is printed to stdout, so it can be captured with `$()` or backticks.
 
 ```bash
-# Search through files in current directory
+# Search through files in current directory (Unix)
 ls | fdr
+# Search through files in current directory (Windows)
+dir | fdr
 
-# Search through lines in a file
-cat lorem_ipsum.txt | fdr
+# Search through lines in a file (Unix)
+cat your_file.txt | fdr
+# Search through lines in a file (Windows)
+type your_file.txt | fdr
 
 # Search through running processes (Unix)
 ps aux | fdr
-
 # Search through running processes (Windows)
-ps | fdr
+tasklist | fdr
 
 # Search environment variables (Unix)
 env | fdr
